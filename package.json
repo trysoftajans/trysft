@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-   "build": "remix vite:build && cp -r build/server netlify/functions/build/ || true",
+    "build": "remix vite:build && cp -r build/server netlify/functions/build/ || true",
     "dev": "remix vite:dev",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",

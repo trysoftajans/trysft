@@ -3,9 +3,8 @@ import { Link } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
-  // İstemci tarafında olup olmadığımızı kontrol etmek için
+  // Client-side kontrolü
   const [isMounted, setIsMounted] = useState(false);
-  
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -13,13 +12,13 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const closeTimeout = useRef(null);
 
-  // Sayfa yüklendikten sonra client-side olduğumuzu işaretleyelim
+  // Component mount olduğunda
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Scroll event'i
   useEffect(() => {
-    // Sadece client-side'da çalıştır
     if (!isMounted) return;
 
     const handleScroll = () => {
@@ -37,8 +36,8 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, dropdownOpen, isMounted]);
 
+  // Click dışı event'i
   useEffect(() => {
-    // Sadece client-side'da çalıştır
     if (!isMounted) return;
 
     const handleClickOutside = (event) => {
@@ -50,6 +49,18 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isMounted]);
 
+  // Smooth scroll için handleServicesClick fonksiyonu
+  const handleServicesClick = (e) => {
+    e.preventDefault();
+    if (!isMounted) return;
+
+    const servicesSection = document.getElementById("services");
+    if (servicesSection) {
+      servicesSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Mouse event handlers
   const handleMouseEnter = () => {
     if (!isMounted) return;
     
@@ -104,12 +115,16 @@ export default function Navbar() {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <Link
-            to="/#services"
-            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1"
+          {/* Hizmetler linki onClick event'i ekledik */}
+          <a
+            href="#services"
+            onClick={handleServicesClick}
+            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
-          </Link>
+          </a>
+          
+          {/* Client-side kontrollü dropdown */}
           {isMounted && dropdownOpen && (
             <div className="absolute top-full left-0 mt-2 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex flex-col gap-2 z-50">
               <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>

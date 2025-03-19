@@ -5,10 +5,7 @@ export const handler = createRequestHandler({
   build: {
     ...remixBuild,
     routes: remixBuild.routes || {},
-    assets: remixBuild.assets || { 
-      version: "dev", 
-      entry: { module: "../../build/server/entry.server.js" } // Yol düzeltildi
-    }
+    assets: remixBuild.assets || { version: "dev", entry: { module: "./entry.server.tsx" } }
   },
   mode: process.env.NODE_ENV,
   getLoadContext(event) {

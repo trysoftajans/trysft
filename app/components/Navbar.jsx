@@ -3,6 +3,7 @@ import { Link } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
+  // Client-side rendering kontrolü için state
   const [isMounted, setIsMounted] = useState(false);
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -11,13 +12,13 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const closeTimeout = useRef(null);
 
-  // Client-side'da çalıştığımızdan emin olalım
+  // Component mount olduğunda client-side'da olduğumuzu işaretle
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    // Client-side'da olduğumuzdan emin olalım
+    // Sadece client-side'da çalıştır
     if (!isMounted) return;
 
     const handleScroll = () => {
@@ -36,7 +37,7 @@ export default function Navbar() {
   }, [lastScrollY, dropdownOpen, isMounted]);
 
   useEffect(() => {
-    // Client-side'da olduğumuzdan emin olalım
+    // Sadece client-side'da çalıştır
     if (!isMounted) return;
 
     const handleClickOutside = (event) => {
@@ -49,6 +50,8 @@ export default function Navbar() {
   }, [isMounted]);
 
   const handleMouseEnter = () => {
+    if (!isMounted) return;
+    
     if (closeTimeout.current) {
       clearTimeout(closeTimeout.current);
     }
@@ -56,12 +59,14 @@ export default function Navbar() {
   };
 
   const handleMouseLeave = () => {
+    if (!isMounted) return;
+    
     closeTimeout.current = setTimeout(() => {
       setDropdownOpen(false);
     }, 150);
   };
 
-  // Server-side rendering veya ilk render sırasında basit bir versiyon gösterelim
+  // Server-side veya ilk render için basit versiyon
   if (!isMounted) {
     return (
       <header className="fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 rounded-full shadow-lg bg-white">
@@ -72,6 +77,15 @@ export default function Navbar() {
             <img src="/image/logo-text.png" alt="Navbar Text" className="h-8 sm:h-10 w-auto" />
           </Link>
         </div>
+        
+        {/* Sadece temel menü öğelerini göster */}
+        <nav className="hidden md:flex md:flex-row items-center md:space-x-8 text-base sm:text-lg font-medium">
+          <Link to="/" className="text-black py-1">Anasayfa</Link>
+          <div className="flex items-center text-black py-1">Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" /></div>
+          <Link to="/about" className="text-black py-1">Hakkımızda</Link>
+          <Link to="/blog" className="text-black py-1">Blog</Link>
+          <Link to="/contact" className="text-black py-1">İletişim</Link>
+        </nav>
 
         {/* Detaylı Bilgi Butonu */}
         <div className="block">
@@ -86,6 +100,7 @@ export default function Navbar() {
     );
   }
 
+  // Client-side tam versiyon
   return (
     <header
       className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible

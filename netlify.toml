@@ -9,9 +9,5 @@
   status = 200
 
 [functions]
-  included_files = [
-    "node_modules/lucide-react/**",
-    "node_modules/framer-motion/**",
-    "node_modules/react-icons/**",
-    "build/server/**"
-  ]
+  node_bundler = "esbuild"
+  included_files = ["build/server/**"]

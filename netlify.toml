@@ -8,6 +8,10 @@
   to = "/.netlify/functions/server"
   status = 200
 
-  [functions]
-  included_files = ["node_modules/lucide-react/**"]
-
+[functions]
+  included_files = [
+    "node_modules/lucide-react/**",
+    "node_modules/framer-motion/**",
+    "node_modules/react-icons/**",
+    "build/server/**"
+  ]

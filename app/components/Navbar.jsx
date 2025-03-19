@@ -3,6 +3,7 @@ import { Link } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
+  const [isMounted, setIsMounted] = useState(false);
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -10,7 +11,15 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const closeTimeout = useRef(null);
 
+  // Client-side'da çalıştığımızdan emin olalım
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Client-side'da olduğumuzdan emin olalım
+    if (!isMounted) return;
+
     const handleScroll = () => {
       if (dropdownOpen) {
         setScrolling(false);
@@ -24,9 +33,12 @@ export default function Navbar() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY, dropdownOpen]);
+  }, [lastScrollY, dropdownOpen, isMounted]);
 
   useEffect(() => {
+    // Client-side'da olduğumuzdan emin olalım
+    if (!isMounted) return;
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
@@ -34,7 +46,7 @@ export default function Navbar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isMounted]);
 
   const handleMouseEnter = () => {
     if (closeTimeout.current) {
@@ -48,6 +60,31 @@ export default function Navbar() {
       setDropdownOpen(false);
     }, 150);
   };
+
+  // Server-side rendering veya ilk render sırasında basit bir versiyon gösterelim
+  if (!isMounted) {
+    return (
+      <header className="fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 rounded-full shadow-lg bg-white">
+        {/* Logo Alanı */}
+        <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center">
+            <img src="/image/logo.png" alt="Navbar Logo" className="h-12 sm:h-14 w-auto" />
+            <img src="/image/logo-text.png" alt="Navbar Text" className="h-8 sm:h-10 w-auto" />
+          </Link>
+        </div>
+
+        {/* Detaylı Bilgi Butonu */}
+        <div className="block">
+          <Link
+            to="/details"
+            className="px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 rounded-full font-bold transition duration-300 bg-black text-white hover:bg-gray-700 text-sm sm:text-base md:text-lg whitespace-nowrap"
+          >
+            Detaylı Bilgi
+          </Link>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
@@ -111,11 +148,8 @@ export default function Navbar() {
           Blog
         </Link>
         <Link to="/contact" reloadDocument className="text-black hover:text-gray-500 py-1">
-  İletişim
-</Link>
-
-
-
+          İletişim
+        </Link>
       </nav>
 
       {/* Detaylı Bilgi Butonu */}

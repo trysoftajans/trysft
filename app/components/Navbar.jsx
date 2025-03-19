@@ -1,81 +1,124 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
+  // Client-side kontrolü
+  const [isMounted, setIsMounted] = useState(false);
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // React state yerine DOM manipülasyonu kullanacağız
   const dropdownRef = useRef(null);
-  const dropdownButtonRef = useRef(null);
-  const dropdownContentRef = useRef(null);
-  
-  // Component mount olduktan sonra gerekli JS eventleri ekleyelim
+  const closeTimeout = useRef(null);
+  const location = useLocation();
+
+  // Sayfa yüklendiğinde client-side'a geçtiğimizi belirtelim
   useEffect(() => {
-    // Scroll işlemini handle et
+    setIsMounted(true);
+  }, []);
+
+  // URL'de hash değişirse, o elemana scroll yapalım
+  useEffect(() => {
+    if (isMounted && location.hash === "#services") {
+      setTimeout(() => {
+        const servicesElement = document.getElementById("services");
+        if (servicesElement) {
+          servicesElement.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [location, isMounted]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      if (dropdownOpen) {
+        setScrolling(false);
+      } else if (window.scrollY > lastScrollY && window.scrollY > 50) {
         setScrolling(true);
       } else {
         setScrolling(false);
       }
-      
-      setLastScrollY(currentScrollY);
+      setLastScrollY(window.scrollY);
     };
-    
-    // Dropdown'u göster/gizle fonksiyonları
-    const showDropdown = () => {
-      if (dropdownContentRef.current) {
-        dropdownContentRef.current.style.display = "flex";
-      }
-    };
-    
-    const hideDropdown = () => {
-      if (dropdownContentRef.current) {
-        dropdownContentRef.current.style.display = "none";
-      }
-    };
-    
-    // Mouse event'leri ekle
-    if (dropdownRef.current) {
-      // Mouse üzerine gelince ve ayrılınca event'leri
-      dropdownRef.current.addEventListener("mouseenter", showDropdown);
-      dropdownRef.current.addEventListener("mouseleave", hideDropdown);
-    }
-    
-    // Smooth scroll için click event'i ekle
-    if (dropdownButtonRef.current) {
-      dropdownButtonRef.current.addEventListener("click", (e) => {
-        e.preventDefault();
-        const servicesSection = document.getElementById("services");
-        if (servicesSection) {
-          servicesSection.scrollIntoView({ behavior: "smooth" });
-        }
-      });
-    }
-    
-    // Scroll event'i ekle
+
     window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY, dropdownOpen, isMounted]);
+
+  useEffect(() => {
+    if (!isMounted) return;
     
-    // Cleanup
-    return () => {
-      if (dropdownRef.current) {
-        dropdownRef.current.removeEventListener("mouseenter", showDropdown);
-        dropdownRef.current.removeEventListener("mouseleave", hideDropdown);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
       }
-      
-      if (dropdownButtonRef.current) {
-        dropdownButtonRef.current.removeEventListener("click", () => {});
-      }
-      
-      window.removeEventListener("scroll", handleScroll);
     };
-  }, [lastScrollY]);
-  
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMounted]);
+
+  const handleMouseEnter = () => {
+    if (!isMounted) return;
+    
+    if (closeTimeout.current) {
+      clearTimeout(closeTimeout.current);
+    }
+    setDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMounted) return;
+    
+    closeTimeout.current = setTimeout(() => {
+      setDropdownOpen(false);
+    }, 150);
+  };
+
+  // Hizmetlerimize tıklandığında anasayfaya gidip services kısmına scroll yapma
+  const handleServicesClick = (e) => {
+    // Eğer zaten anasayfadaysak, default davranışı engelle ve manuel scroll yap
+    if (location.pathname === "/") {
+      e.preventDefault();
+      const servicesElement = document.getElementById("services");
+      if (servicesElement) {
+        servicesElement.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    // Eğer başka sayfadaysak, Link'in default davranışı çalışacak, 
+    // bu da anasayfaya gidip URL'de #services'i tutacak
+  };
+
+  // Server-side veya ilk render için, sabit bir navbar döndür
+  if (!isMounted) {
+    return (
+      <header className="fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 rounded-full shadow-lg bg-white">
+        <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center">
+            <img src="/image/logo.png" alt="Navbar Logo" className="h-12 sm:h-14 w-auto" />
+            <img src="/image/logo-text.png" alt="Navbar Text" className="h-8 sm:h-10 w-auto" />
+          </Link>
+        </div>
+
+        <div className="hidden md:flex md:flex-row items-center md:space-x-8 text-base sm:text-lg font-medium">
+          <div className="text-black py-1">Yükleniyor...</div>
+        </div>
+
+        <div className="block">
+          <Link
+            to="/details"
+            className="px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 rounded-full font-bold transition duration-300 bg-black text-white hover:bg-gray-700 text-sm sm:text-base md:text-lg whitespace-nowrap"
+          >
+            Detaylı Bilgi
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header
       className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible
@@ -106,21 +149,23 @@ export default function Navbar() {
           Anasayfa
         </Link>
         
-        {/* Hizmetlerimiz Dropdown - Vanilla JS yaklaşımı kullanıyoruz */}
-        <div className="relative inline-block" ref={dropdownRef}>
-          <a
-            href="#services"
-            ref={dropdownButtonRef}
-            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
+        {/* Hizmetlerimiz Dropdown */}
+        <div
+          className="relative inline-block"
+          ref={dropdownRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <Link
+            to="/#services"
+            onClick={handleServicesClick}
+            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1"
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
-          </a>
+          </Link>
           
-          {/* Style ile başlangıçta gizli olacak */}
           <div 
-            ref={dropdownContentRef}
-            className="absolute top-full left-0 mt-2 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50"
-            style={{ display: "none" }}
+            className={`absolute top-full left-0 mt-2 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex flex-col gap-2 z-50 ${dropdownOpen ? 'block' : 'hidden'}`}
           >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>

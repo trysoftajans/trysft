@@ -92,6 +92,9 @@ export default function Navbar() {
         </Link>
         
         {/* Hizmetlerimiz Dropdown - HTML ID'lerle doğrudan erişim */}
+        
+
+
         <div className="relative inline-block group">
   <Link
     to="/#services"
@@ -100,7 +103,10 @@ export default function Navbar() {
     Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
   </Link>
   
-  <div className="absolute hidden group-hover:flex group-hover:flex-col top-full left-0 mt-1 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50">
+  {/* Görünmez köprü - bu element ana öğe ile dropdown arasındaki boşluğu doldurur */}
+  <div className="absolute w-full h-3 bg-transparent"></div>
+  
+  <div className="absolute hidden group-hover:flex group-hover:flex-col top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50">
     <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
     <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
     <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>

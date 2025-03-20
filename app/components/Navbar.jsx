@@ -12,59 +12,20 @@ export default function Navbar() {
   // Client-side check
   useEffect(() => {
     setIsBrowser(true);
+    
+    // İlk yüklemede son scroll pozisyonunu ayarla
+    if (typeof window !== 'undefined') {
+      setLastScrollY(window.scrollY);
+    }
   }, []);
 
-  // Hash fragment handler with force scroll to top first
+  // Hash fragment handler
   useEffect(() => {
     if (!isBrowser) return;
     
     if (location.hash === "#services") {
-      // First scroll to top
       window.scrollTo(0, 0);
       
-      // Then scroll to services section after a delay
-      setTimeout(() => {
-        const servicesElement = document.getElementById("services");
-        if (servicesElement) {
-          servicesElement.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 500); // Longer delay for better results
-    }
-  }, [location, isBrowser]);
-
-  // Improved scroll handler
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Hide navbar when scrolling down and past threshold
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setScrolling(true);
-      } 
-      // Show navbar when scrolling up
-      else if (currentScrollY < lastScrollY) {
-        setScrolling(false);
-      }
-      
-      // Update last scroll position
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY, isBrowser]);
-
-  // Handle services link click with force to top
-  const handleServicesClick = (e) => {
-    if (window.location.pathname === '/') {
-      e.preventDefault();
-      
-      // First scroll to top
-      window.scrollTo(0, 0);
-      
-      // Then scroll to services with delay
       setTimeout(() => {
         const servicesElement = document.getElementById("services");
         if (servicesElement) {
@@ -72,7 +33,76 @@ export default function Navbar() {
         }
       }, 500);
     }
-    // Default behavior for other pages
+  }, [location, isBrowser]);
+
+  // Scroll handler with more precise logic
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    // Threshold değeri - kaç piksel aşağı scroll ettikten sonra navbar kaybolmaya başlasın
+    const threshold = 50;
+    
+    // Minimum fark - scroll olayları arasındaki minimum fark değeri
+    const minDifference = 10;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const difference = Math.abs(currentScrollY - lastScrollY);
+      
+      // Eğer fark çok küçükse, gereksiz state güncellemesini önleyelim
+      if (difference < minDifference) {
+        return;
+      }
+      
+      // Aşağı kaydırma ve threshold'u geçme
+      if (currentScrollY > lastScrollY && currentScrollY > threshold) {
+        // Eğer zaten scrolling durumunda değilse, state'i güncelle
+        if (!scrolling) {
+          setScrolling(true);
+        }
+      } 
+      // Yukarı kaydırma
+      else if (currentScrollY < lastScrollY) {
+        // Eğer hala scrolling durumundaysa, state'i güncelle
+        if (scrolling) {
+          setScrolling(false);
+        }
+      }
+      
+      // Son scroll pozisyonunu güncelle
+      setLastScrollY(currentScrollY);
+    };
+
+    // Throttled scroll handler - performans için
+    let ticking = false;
+    
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lastScrollY, scrolling, isBrowser]);
+
+  // Handle services link click
+  const handleServicesClick = (e) => {
+    if (window.location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo(0, 0);
+      
+      setTimeout(() => {
+        const servicesElement = document.getElementById("services");
+        if (servicesElement) {
+          servicesElement.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 500);
+    }
   };
 
   return (

@@ -10,5 +10,5 @@ export default {
   },
   publicPath: "/build/",
   serverBuildPath: "netlify/functions/server.js",
-  assetsBuildDirectory: "public/build"
+  assetsBuildDirectory: "build/client"
 };

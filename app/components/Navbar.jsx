@@ -14,19 +14,21 @@ export default function Navbar() {
     setIsBrowser(true);
   }, []);
 
-  // Hash fragment scroll handler
+  // Hash fragment handler with force scroll to top first
   useEffect(() => {
     if (!isBrowser) return;
     
-    // Handle smooth scrolling when hash changes or on initial load
     if (location.hash === "#services") {
-      // Short delay to make sure the DOM is fully loaded
+      // First scroll to top
+      window.scrollTo(0, 0);
+      
+      // Then scroll to services section after a delay
       setTimeout(() => {
-        const element = document.getElementById("services");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
+        const servicesElement = document.getElementById("services");
+        if (servicesElement) {
+          servicesElement.scrollIntoView({ behavior: "smooth" });
         }
-      }, 200);
+      }, 500); // Longer delay for better results
     }
   }, [location, isBrowser]);
 
@@ -47,17 +49,23 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isBrowser]);
 
-  // Handle services link click
+  // Handle services link click with force to top
   const handleServicesClick = (e) => {
     if (window.location.pathname === '/') {
-      // If already on home page, prevent default and handle smooth scroll manually
       e.preventDefault();
-      const element = document.getElementById("services");
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
+      
+      // First scroll to top
+      window.scrollTo(0, 0);
+      
+      // Then scroll to services with delay
+      setTimeout(() => {
+        const servicesElement = document.getElementById("services");
+        if (servicesElement) {
+          servicesElement.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 500);
     }
-    // If not on home page, let default navigation happen (will go to "/#services")
+    // Default behavior for other pages
   };
 
   return (

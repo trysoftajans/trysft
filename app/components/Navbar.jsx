@@ -92,32 +92,23 @@ export default function Navbar() {
         </Link>
         
         {/* Hizmetlerimiz Dropdown - HTML ID'lerle doğrudan erişim */}
-        <div
-          id="services-dropdown"
-          className="relative inline-block"
-          style={{ padding: '5px 0' }} // Mouse alanını genişlet
-        >
-          <Link
-            to="/#services"
-            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1"
-          >
-            Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
-          </Link>
-          
-          {/* Dropdown content - başlangıçta gizli */}
-          <div 
-            id="services-dropdown-content"
-            className="absolute top-full left-0 mt-1 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50"
-            style={{ display: 'none', paddingTop: '5px' }}
-          >
-            <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
-            <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
-            <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
-            <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
-            <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
-            <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
-          </div>
-        </div>
+        <div className="relative inline-block group">
+  <Link
+    to="/#services"
+    className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1"
+  >
+    Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
+  </Link>
+  
+  <div className="absolute hidden group-hover:flex group-hover:flex-col top-full left-0 mt-1 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50">
+    <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
+    <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
+    <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
+    <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
+    <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
+    <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
+  </div>
+</div>
 
         <Link to="/about" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
           Hakkımızda

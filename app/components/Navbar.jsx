@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
@@ -7,11 +7,28 @@ export default function Navbar() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isBrowser, setIsBrowser] = useState(false);
+  const location = useLocation();
 
   // Client-side check
   useEffect(() => {
     setIsBrowser(true);
   }, []);
+
+  // Hash fragment scroll handler
+  useEffect(() => {
+    if (!isBrowser) return;
+    
+    // Handle smooth scrolling when hash changes or on initial load
+    if (location.hash === "#services") {
+      // Short delay to make sure the DOM is fully loaded
+      setTimeout(() => {
+        const element = document.getElementById("services");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 200);
+    }
+  }, [location, isBrowser]);
 
   // Scroll handler
   useEffect(() => {
@@ -30,7 +47,19 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isBrowser]);
 
-  // Simplified header with correct tag structure
+  // Handle services link click
+  const handleServicesClick = (e) => {
+    if (window.location.pathname === '/') {
+      // If already on home page, prevent default and handle smooth scroll manually
+      e.preventDefault();
+      const element = document.getElementById("services");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    // If not on home page, let default navigation happen (will go to "/#services")
+  };
+
   return (
     <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none" : "opacity-100 bg-white shadow-2xl"}`}>
       {/* Logo */}
@@ -57,7 +86,11 @@ export default function Navbar() {
         
         {/* Services dropdown */}
         <div className="relative inline-block group">
-          <a href="/#services" className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer">
+          <a 
+            href="/#services" 
+            onClick={handleServicesClick}
+            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
+          >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </a>
           

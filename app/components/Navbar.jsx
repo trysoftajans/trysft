@@ -7,19 +7,91 @@ export default function Navbar() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const mobileMenuRef = useRef(null);
-  const buttonRef = useRef(null);
   
+  // Sayfa yüklenirken React'tan bağımsız olarak çalışacak script
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // React dışında, doğrudan vanilla JS ile menüyü yönetecek kod
+    const vanillaJSFix = `
+      (function() {
+        // Sayfa tamamen yüklendiğinde çalışacak
+        function initMobileMenu() {
+          // Elementleri bulalım
+          var hamburgerButton = document.getElementById('hamburger-button');
+          var mobileMenu = document.getElementById('mobile-menu');
+          
+          // Menüyü başlangıçta gizleyelim
+          if (mobileMenu) {
+            mobileMenu.style.display = 'none';
+          }
+          
+          // Buton işlevselliği
+          if (hamburgerButton && mobileMenu) {
+            // Yeni bir tıklama işleyici ekleyelim
+            hamburgerButton.onclick = function(e) {
+              e.preventDefault();
+              toggleMenu();
+            };
+            
+            // Dokunmatik işleyiciler
+            hamburgerButton.ontouchstart = function(e) {
+              e.preventDefault();
+              toggleMenu();
+              return false;
+            };
+            
+            // Menü açma/kapama
+            function toggleMenu() {
+              console.log("Menü toggle çalıştı");
+              if (mobileMenu.style.display === 'flex') {
+                mobileMenu.style.display = 'none';
+              } else {
+                mobileMenu.style.display = 'flex';
+              }
+            }
+            
+            // Dışarı tıklama ile kapanma
+            document.addEventListener('click', function(e) {
+              if (mobileMenu.style.display === 'flex' && 
+                  !mobileMenu.contains(e.target) && 
+                  !hamburgerButton.contains(e.target)) {
+                mobileMenu.style.display = 'none';
+              }
+            });
+          }
+        }
+        
+        // Sayfa yüklendiğinde veya DOM değiştiğinde tekrar çalıştıralım
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          setTimeout(initMobileMenu, 1);
+        } else {
+          document.addEventListener('DOMContentLoaded', initMobileMenu);
+        }
+        
+        // Sayfada gezinme olduğunda veya DOM güncellendiğinde de çalıştıralım
+        var lastCheckedHref = window.location.href;
+        setInterval(function() {
+          if (window.location.href !== lastCheckedHref) {
+            lastCheckedHref = window.location.href;
+            setTimeout(initMobileMenu, 100);
+          }
+        }, 500);
+        
+        // Hemen çalıştıralım
+        initMobileMenu();
+      })();
+    `;
     
-    setLastScrollY(window.scrollY);
+    // Script'i sayfaya ekleyelim
+    const scriptElem = document.createElement('script');
+    scriptElem.innerHTML = vanillaJSFix;
+    document.body.appendChild(scriptElem);
     
-    // Sayfa yüklendiğinde menünün kapalı olduğundan emin olalım
-    const menu = document.getElementById('mobile-menu');
-    if (menu) {
-      menu.style.display = 'none';
-    }
+    // Temizleme
+    return () => {
+      if (scriptElem && document.body.contains(scriptElem)) {
+        document.body.removeChild(scriptElem);
+      }
+    };
   }, []);
 
   // Scroll handler
@@ -41,54 +113,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
-
-  // Sabit ID'lerle çalışalım, React state yerine DOM elementlerine odaklanalım
-  const toggleMobileMenu = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    
-    // DOM elementini direkt referans alalım
-    const menu = document.getElementById('mobile-menu');
-    if (!menu) return;
-    
-    // Menü o an açıksa (görünürse) kapatalım, kapalıysa açalım
-    if (menu.style.display === 'flex') {
-      // Menü açık, kapatalım
-      menu.style.display = 'none';
-      setMobileMenuOpen(false);
-    } else {
-      // Menü kapalı, açalım
-      menu.style.display = 'flex';
-      setMobileMenuOpen(true);
-    }
-    
-    console.log("Menü durumu değiştirildi:", menu.style.display === 'flex' ? 'açık' : 'kapalı');
-  };
-
-  // Dışarıya tıklayınca menüyü kapatma
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleClickOutside = (e) => {
-      const menu = document.getElementById('mobile-menu');
-      const button = document.getElementById('hamburger-button');
-      
-      if (menu && button && !menu.contains(e.target) && !button.contains(e.target)) {
-        menu.style.display = 'none';
-        setMobileMenuOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside, { passive: true });
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, []);
 
   // Handle services link click
   const handleServicesClick = (e) => {
@@ -127,42 +151,22 @@ export default function Navbar() {
           </Link>
         </div>
         
-        {/* Hamburger Button */}
+        {/* Hamburger Button - En basit haliyle */}
         <button
           id="hamburger-button"
-          ref={buttonRef}
           type="button"
-          onClick={toggleMobileMenu}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            toggleMobileMenu(e);
-          }}
           className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none z-[10000]"
-          aria-expanded={mobileMenuOpen}
           aria-label="Toggle navigation"
-          style={{ 
-            touchAction: 'manipulation',
-            WebkitTapHighlightColor: 'transparent',
-            cursor: 'pointer'
-          }}
         >
-          {mobileMenuOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Menu className="w-6 h-6" />
-          )}
+          <Menu className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Tüm event handler'ları kaldırıldı */}
       <div
         id="mobile-menu"
-        ref={mobileMenuRef}
         className="absolute left-0 top-20 w-full bg-white rounded-xl shadow-lg p-4 flex-col items-start z-[9990]"
-        style={{ 
-          display: 'none', 
-          transition: 'none'
-        }}
+        style={{ display: 'none' }}
       >
         <Link to="/" className="w-full py-3 border-b border-gray-100 text-black">
           Anasayfa

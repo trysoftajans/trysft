@@ -1,35 +1,50 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "@remix-run/react";
+import React, { useState, useEffect } from "react";
+import { Link } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
-  // Tarayıcı kontrolü
-  const [isBrowser, setIsBrowser] = useState(false);
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // Dropdown için doğrudan style manipülasyonu kullanacağız
-  const dropdownRef = useRef(null);
-  const location = useLocation();
+  const [isBrowser, setIsBrowser] = useState(false);
 
-  // Component yüklendiğinde client-side'da olduğumuzu işaretleyelim
+  // Client-side check
   useEffect(() => {
     setIsBrowser(true);
+    
+    // Dropdown için özel script ekleyelim - Client tarafında çalışacak
+    if (typeof document !== 'undefined') {
+      const script = document.createElement('script');
+      script.innerHTML = `
+        function setupDropdown() {
+          var dropdown = document.getElementById('services-dropdown');
+          var dropdownContent = document.getElementById('services-dropdown-content');
+          
+          if (dropdown && dropdownContent) {
+            dropdown.onmouseenter = function() {
+              dropdownContent.style.display = 'flex';
+            };
+            
+            dropdown.onmouseleave = function() {
+              dropdownContent.style.display = 'none';
+            };
+          }
+        }
+        
+        // Sayfa yüklendikten sonra fonksiyonu çalıştır
+        document.addEventListener('DOMContentLoaded', setupDropdown);
+        
+        // React hydration için ek güvenlik
+        setTimeout(setupDropdown, 1000);
+      `;
+      document.head.appendChild(script);
+      
+      return () => {
+        document.head.removeChild(script);
+      };
+    }
   }, []);
 
-  // URL hash'i değiştiğinde smooth scroll
-  useEffect(() => {
-    if (isBrowser && location.hash === "#services") {
-      setTimeout(() => {
-        const servicesSection = document.getElementById("services");
-        if (servicesSection) {
-          servicesSection.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 0);
-    }
-  }, [location, isBrowser]);
-
-  // Scroll event listener
   useEffect(() => {
     if (!isBrowser) return;
     
@@ -45,39 +60,6 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isBrowser]);
-
-  // Dropdown için inline stil yaklaşımı - SSR sorunlarını önler
-  useEffect(() => {
-    if (!isBrowser || !dropdownRef.current) return;
-    
-    // Dropdown menüsü elementini bulalım
-    const dropdown = dropdownRef.current.querySelector('.dropdown-menu');
-    if (!dropdown) return;
-    
-    // Mouse ile üzerine gelindiğinde göster, ayrıldığında gizle
-    const showDropdown = () => { 
-      dropdown.style.display = 'flex';
-      dropdown.style.opacity = '1';
-    };
-    
-    const hideDropdown = () => {
-      dropdown.style.opacity = '0';
-      setTimeout(() => {
-        dropdown.style.display = 'none';
-      }, 150);
-    };
-    
-    // Event listener'lar
-    dropdownRef.current.addEventListener('mouseenter', showDropdown);
-    dropdownRef.current.addEventListener('mouseleave', hideDropdown);
-    
-    return () => {
-      if (dropdownRef.current) {
-        dropdownRef.current.removeEventListener('mouseenter', showDropdown);
-        dropdownRef.current.removeEventListener('mouseleave', hideDropdown);
-      }
-    };
-  }, [isBrowser]);
 
   return (
     <header
@@ -109,10 +91,11 @@ export default function Navbar() {
           Anasayfa
         </Link>
         
-        {/* Hizmetlerimiz Dropdown */}
+        {/* Hizmetlerimiz Dropdown - HTML ID'lerle doğrudan erişim */}
         <div
+          id="services-dropdown"
           className="relative inline-block"
-          ref={dropdownRef}
+          style={{ padding: '5px 0' }} // Mouse alanını genişlet
         >
           <Link
             to="/#services"
@@ -121,13 +104,11 @@ export default function Navbar() {
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </Link>
           
-          {/* Boşluğu dolduran element */}
-          <div className="absolute top-full left-0 right-0 h-4 bg-transparent"></div>
-          
-          {/* Dropdown menüsü - başlangıçta gizli */}
+          {/* Dropdown content - başlangıçta gizli */}
           <div 
-            className="dropdown-menu absolute top-[calc(100%+4px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50 transition-opacity duration-150"
-            style={{ display: 'none', opacity: 0 }}
+            id="services-dropdown-content"
+            className="absolute top-full left-0 mt-1 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50"
+            style={{ display: 'none', paddingTop: '5px' }}
           >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>

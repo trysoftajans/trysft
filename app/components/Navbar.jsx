@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "@remix-run/react";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [scrolling, setScrolling] = useState(false);
@@ -9,121 +9,132 @@ export default function Navbar() {
   const [isBrowser, setIsBrowser] = useState(false);
   const location = useLocation();
   const mobileMenuRef = useRef(null);
-  const menuButtonRef = useRef(null); // Menü butonu için ref eklendi
+  const menuButtonRef = useRef(null);
 
   // Client-side check
   useEffect(() => {
     setIsBrowser(true);
     
-    // İlk yüklemede son scroll pozisyonunu ayarla
     if (typeof window !== 'undefined') {
       setLastScrollY(window.scrollY);
     }
   }, []);
 
-  // Handling click outside to close mobile menu
+  // CRITICAL: Forcefully check if we're on mobile
   useEffect(() => {
-    if (!isBrowser) return;
+    // Basit bir mobil cihaz kontrolü
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    function handleClickOutside(event) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && 
-          menuButtonRef.current && !menuButtonRef.current.contains(event.target)) {
-        setMobileMenuOpen(false);
+    if (isMobile) {
+      console.log("Mobile device detected");
+      
+      // Mobil cihazlarda ekstra event dinleyicileri ekleme
+      const menuBtn = document.querySelector('.mobile-menu-btn');
+      if (menuBtn) {
+        // Tüm event türlerini ekleme
+        ['click', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'pointerdown', 'pointerup'].forEach(eventType => {
+          menuBtn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log(`Button ${eventType} event triggered`);
+            setMobileMenuOpen(prev => !prev);
+          }, { passive: false, capture: true });
+        });
       }
     }
+  }, [isBrowser]);
+
+  // Handling click outside to close mobile menu - completely revamped
+  useEffect(() => {
+    if (!isBrowser || !mobileMenuOpen) return;
     
-    if (mobileMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      // Touch eventlerini ekleyelim
-      document.addEventListener("touchstart", handleClickOutside);
-    }
+    const handleClickOutside = (event) => {
+      // Menü buttonu tıklamalarını handle etme işlemini buradan çıkaralım
+      if (menuButtonRef.current && menuButtonRef.current.contains(event.target)) {
+        return;
+      }
+      
+      // Sadece menüye tıklanmazsa kapat
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        console.log("Clicked outside menu - closing");
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    // Tüm olası event türlerini dinle
+    ['mousedown', 'touchstart', 'pointerdown'].forEach(eventType => {
+      document.addEventListener(eventType, handleClickOutside, { passive: true });
+    });
     
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
+      ['mousedown', 'touchstart', 'pointerdown'].forEach(eventType => {
+        document.removeEventListener(eventType, handleClickOutside);
+      });
     };
   }, [mobileMenuOpen, isBrowser]);
 
-  // Toggle mobile menu with forced client-side handling
-  const toggleMobileMenu = () => {
-    if (isBrowser) {
-      console.log('Menu toggle clicked'); // Debug için log ekleyelim
-      setMobileMenuOpen(prevState => !prevState);
+  // Simplified toggle function with debug
+  const toggleMobileMenu = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
+    
+    console.log('toggleMobileMenu called, current state:', mobileMenuOpen);
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  // Scroll handler
+  // Scroll handler with performance optimizations
   useEffect(() => {
     if (!isBrowser) return;
     
-    // Threshold değeri - kaç piksel aşağı scroll ettikten sonra navbar kaybolmaya başlasın
     const threshold = 50;
-    
-    // Minimum fark - scroll olayları arasındaki minimum fark değeri
     const minDifference = 10;
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const difference = Math.abs(currentScrollY - lastScrollY);
       
-      // Eğer fark çok küçükse, gereksiz state güncellemesini önleyelim
-      if (difference < minDifference) {
-        return;
-      }
+      if (difference < minDifference) return;
       
-      // Aşağı kaydırma ve threshold'u geçme
-      if (currentScrollY > lastScrollY && currentScrollY > threshold) {
-        // Eğer zaten scrolling durumunda değilse, state'i güncelle
-        if (!scrolling) {
-          setScrolling(true);
-        }
-      } 
-      // Yukarı kaydırma
-      else if (currentScrollY < lastScrollY) {
-        // Eğer hala scrolling durumundaysa, state'i güncelle
-        if (scrolling) {
-          setScrolling(false);
-        }
-      }
-      
-      // Son scroll pozisyonunu güncelle
+      setScrolling(currentScrollY > lastScrollY && currentScrollY > threshold);
       setLastScrollY(currentScrollY);
     };
 
-    // Throttled scroll handler - performans için
-    let ticking = false;
+    // More efficient scroll handling
+    let scrollTimeout;
     
     const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
+      if (scrollTimeout) return;
+      
+      scrollTimeout = setTimeout(() => {
+        handleScroll();
+        scrollTimeout = null;
+      }, 10);
     };
 
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastScrollY, scrolling, isBrowser]);
+  }, [lastScrollY, isBrowser]);
 
   // Handle services link click
   const handleServicesClick = (e) => {
     if (window.location.pathname === '/') {
       e.preventDefault();
-      window.scrollTo(0, 0);
       
-      setTimeout(() => {
-        const servicesElement = document.getElementById("services");
-        if (servicesElement) {
-          servicesElement.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 500);
+      const servicesElement = document.getElementById("services");
+      if (servicesElement) {
+        servicesElement.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
   return (
-    <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-[999] transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none translate-y-[-100%]" : "opacity-100 bg-white shadow-2xl"}`}>
+    <header 
+      className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-2 flex items-center justify-between z-[9999] transition-all duration-300 rounded-full shadow-lg ${
+        scrolling ? "opacity-0 pointer-events-none -translate-y-full" : "opacity-100 bg-white shadow-2xl"
+      }`}
+    >
       {/* Logo */}
       <div className="flex items-center space-x-3">
         <Link to="/" className="flex items-center">
@@ -132,52 +143,59 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Mobile menu button */}
-      <button
-        ref={menuButtonRef} // Ref eklendi
-        className="md:hidden text-black p-2 z-[1000]" // z-index arttırıldı
+      {/* Mobile menu button - Daha belirgin yapıldı */}
+      <div 
+        ref={menuButtonRef}
+        className="mobile-menu-btn md:hidden flex items-center justify-center cursor-pointer z-[10000]"
         onClick={toggleMobileMenu}
-        onTouchStart={(e) => { e.preventDefault(); toggleMobileMenu(); }} // Touch event eklendi
-        aria-label="Toggle menu"
-        type="button"
-        style={{ touchAction: 'manipulation' }} // Touch action eklendi
+        onTouchStart={toggleMobileMenu}
+        onTouchEnd={(e) => e.preventDefault()}
+        style={{ 
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
+          padding: '8px'
+        }}
       >
-        <Menu className="w-8 h-8" /> {/* Boyutu büyütüldü */}
-      </button>
+        <div 
+          className="w-14 h-14 flex items-center justify-center rounded-full bg-black hover:bg-gray-800 shadow-lg"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? (
+            <X className="w-8 h-8 text-white" />
+          ) : (
+            <Menu className="w-8 h-8 text-white" />
+          )}
+        </div>
+      </div>
 
       {/* Navigation menu */}
       <nav 
         ref={mobileMenuRef}
-        className={`absolute md:relative top-16 md:top-auto left-0 w-full md:w-auto bg-white md:bg-transparent shadow-md md:shadow-none p-4 sm:p-5 md:p-0 flex flex-col md:flex-row items-center md:space-x-8 text-base sm:text-lg font-medium rounded-lg z-[990] ${mobileMenuOpen ? "block" : "hidden md:flex"}`}
+        className={`
+          absolute md:relative top-20 md:top-auto left-0 w-full md:w-auto 
+          bg-white md:bg-transparent rounded-xl shadow-lg md:shadow-none 
+          p-6 md:p-0 flex flex-col md:flex-row items-center md:space-x-8 
+          text-lg font-medium z-[9990] transition-all duration-300 ease-in-out
+          ${mobileMenuOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-10 md:opacity-100 md:visible md:translate-y-0"}
+        `}
       >
-        {/* Mobile menu close button */}
-        <button
-          className="md:hidden self-end text-gray-500 mb-4 p-2 text-xl" // Padding eklendi ve font büyütüldü
-          onClick={() => setMobileMenuOpen(false)}
-          onTouchStart={(e) => { e.preventDefault(); setMobileMenuOpen(false); }} // Touch event eklendi
-        >
-          X
-        </button>
+        {/* No need for mobile menu close button here since we have X in the toggle button */}
         
-        <Link to="/" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
+        <Link to="/" className="w-full md:w-auto text-center border-b md:border-0 border-gray-200 py-3 md:py-0 transition duration-300 cursor-pointer text-black hover:text-gray-500">
           Anasayfa
         </Link>
         
         {/* Services dropdown */}
-        <div className="relative inline-block group">
+        <div className="relative inline-block group w-full md:w-auto text-center border-b md:border-0 border-gray-200 py-3 md:py-0">
           <a 
             href="/#services" 
             onClick={handleServicesClick}
-            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
+            className="flex items-center justify-center md:justify-start text-black hover:text-gray-500 transition duration-300 cursor-pointer"
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </a>
           
-          {/* Invisible bridge */}
-          <div className="absolute w-full h-3 bg-transparent"></div>
-          
-          {/* Dropdown menu */}
-          <div className="absolute hidden group-hover:flex group-hover:flex-col top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50">
+          <div className="absolute hidden group-hover:flex group-hover:flex-col top-full left-0 md:left-auto md:right-0 w-full md:w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50 mt-2">
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
             <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
@@ -187,19 +205,29 @@ export default function Navbar() {
           </div>
         </div>
 
-        <Link to="/about" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
+        <Link to="/about" className="w-full md:w-auto text-center border-b md:border-0 border-gray-200 py-3 md:py-0 transition duration-300 cursor-pointer text-black hover:text-gray-500">
           Hakkımızda
         </Link>
-        <Link to="/blog" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
+        <Link to="/blog" className="w-full md:w-auto text-center border-b md:border-0 border-gray-200 py-3 md:py-0 transition duration-300 cursor-pointer text-black hover:text-gray-500">
           Blog
         </Link>
-        <Link to="/contact" reloadDocument className="text-black hover:text-gray-500 py-1">
+        <Link to="/contact" reloadDocument className="w-full md:w-auto text-center py-3 md:py-0 text-black hover:text-gray-500">
           İletişim
         </Link>
+        
+        {/* Detaylı Bilgi butonu - mobil görünüm için eklendi */}
+        <div className="w-full mt-4 md:hidden">
+          <Link
+            to="/details"
+            className="block w-full py-4 rounded-full font-bold text-center transition duration-300 bg-black text-white hover:bg-gray-700 text-lg whitespace-nowrap"
+          >
+            Detaylı Bilgi
+          </Link>
+        </div>
       </nav>
 
-      {/* Details Button */}
-      <div className="block">
+      {/* Details Button - Sadece desktop için */}
+      <div className="hidden md:block">
         <Link
           to="/details"
           className="px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 rounded-full font-bold transition duration-300 bg-black text-white hover:bg-gray-700 text-sm sm:text-base md:text-lg whitespace-nowrap"

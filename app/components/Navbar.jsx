@@ -1,42 +1,35 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "@remix-run/react";
+import { Link, useLocation } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
+  // Tarayıcı kontrolü
   const [isBrowser, setIsBrowser] = useState(false);
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  // Dropdown için doğrudan style manipülasyonu kullanacağız
   const dropdownRef = useRef(null);
-  const dropdownContentRef = useRef(null);
+  const location = useLocation();
 
-  // Component mount olduğunda
+  // Component yüklendiğinde client-side'da olduğumuzu işaretleyelim
   useEffect(() => {
     setIsBrowser(true);
-    
-    if (dropdownRef.current && dropdownContentRef.current) {
-      const showDropdown = () => {
-        dropdownContentRef.current.style.display = 'flex';
-      };
-      
-      const hideDropdown = () => {
-        dropdownContentRef.current.style.display = 'none';
-      };
-      
-      // Hem menü butonu hem de dropdown içeriği için event'ler ekleyelim
-      dropdownRef.current.addEventListener('mouseenter', showDropdown);
-      dropdownRef.current.addEventListener('mouseleave', hideDropdown);
-      
-      return () => {
-        if (dropdownRef.current) {
-          dropdownRef.current.removeEventListener('mouseenter', showDropdown);
-          dropdownRef.current.removeEventListener('mouseleave', hideDropdown);
-        }
-      };
-    }
   }, []);
 
+  // URL hash'i değiştiğinde smooth scroll
+  useEffect(() => {
+    if (isBrowser && location.hash === "#services") {
+      setTimeout(() => {
+        const servicesSection = document.getElementById("services");
+        if (servicesSection) {
+          servicesSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 0);
+    }
+  }, [location, isBrowser]);
+
+  // Scroll event listener
   useEffect(() => {
     if (!isBrowser) return;
     
@@ -52,6 +45,39 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY, isBrowser]);
+
+  // Dropdown için inline stil yaklaşımı - SSR sorunlarını önler
+  useEffect(() => {
+    if (!isBrowser || !dropdownRef.current) return;
+    
+    // Dropdown menüsü elementini bulalım
+    const dropdown = dropdownRef.current.querySelector('.dropdown-menu');
+    if (!dropdown) return;
+    
+    // Mouse ile üzerine gelindiğinde göster, ayrıldığında gizle
+    const showDropdown = () => { 
+      dropdown.style.display = 'flex';
+      dropdown.style.opacity = '1';
+    };
+    
+    const hideDropdown = () => {
+      dropdown.style.opacity = '0';
+      setTimeout(() => {
+        dropdown.style.display = 'none';
+      }, 150);
+    };
+    
+    // Event listener'lar
+    dropdownRef.current.addEventListener('mouseenter', showDropdown);
+    dropdownRef.current.addEventListener('mouseleave', hideDropdown);
+    
+    return () => {
+      if (dropdownRef.current) {
+        dropdownRef.current.removeEventListener('mouseenter', showDropdown);
+        dropdownRef.current.removeEventListener('mouseleave', hideDropdown);
+      }
+    };
+  }, [isBrowser]);
 
   return (
     <header
@@ -83,7 +109,7 @@ export default function Navbar() {
           Anasayfa
         </Link>
         
-        {/* Hizmetlerimiz Dropdown - Tüm alanı kapsayan div */}
+        {/* Hizmetlerimiz Dropdown */}
         <div
           className="relative inline-block"
           ref={dropdownRef}
@@ -95,13 +121,13 @@ export default function Navbar() {
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </Link>
           
-          {/* Dropdown ve ana menü arasındaki boşluğu doldurmak için */}
-          <div className="absolute top-full left-0 right-0 h-3 bg-transparent" />
+          {/* Boşluğu dolduran element */}
+          <div className="absolute top-full left-0 right-0 h-4 bg-transparent"></div>
           
+          {/* Dropdown menüsü - başlangıçta gizli */}
           <div 
-            ref={dropdownContentRef}
-            className="absolute top-[calc(100%+3px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50"
-            style={{ display: 'none' }}
+            className="dropdown-menu absolute top-[calc(100%+4px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50 transition-opacity duration-150"
+            style={{ display: 'none', opacity: 0 }}
           >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>

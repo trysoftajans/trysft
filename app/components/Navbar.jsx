@@ -3,29 +3,45 @@ import { Link } from "@remix-run/react";
 import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
-  // Browser check için eklenen satır
   const [isBrowser, setIsBrowser] = useState(false);
-  
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
   const dropdownRef = useRef(null);
-  const closeTimeout = useRef(null);
+  const dropdownContentRef = useRef(null);
 
-  // Client-side render kontrolü - sadece bu eklendi
+  // Component mount olduğunda
   useEffect(() => {
     setIsBrowser(true);
+    
+    if (dropdownRef.current && dropdownContentRef.current) {
+      const showDropdown = () => {
+        dropdownContentRef.current.style.display = 'flex';
+      };
+      
+      const hideDropdown = () => {
+        dropdownContentRef.current.style.display = 'none';
+      };
+      
+      // Hem menü butonu hem de dropdown içeriği için event'ler ekleyelim
+      dropdownRef.current.addEventListener('mouseenter', showDropdown);
+      dropdownRef.current.addEventListener('mouseleave', hideDropdown);
+      
+      return () => {
+        if (dropdownRef.current) {
+          dropdownRef.current.removeEventListener('mouseenter', showDropdown);
+          dropdownRef.current.removeEventListener('mouseleave', hideDropdown);
+        }
+      };
+    }
   }, []);
 
   useEffect(() => {
-    // Browser check - bu eklendi
     if (!isBrowser) return;
     
     const handleScroll = () => {
-      if (dropdownOpen) {
-        setScrolling(false);
-      } else if (window.scrollY > lastScrollY && window.scrollY > 50) {
+      if (window.scrollY > lastScrollY && window.scrollY > 50) {
         setScrolling(true);
       } else {
         setScrolling(false);
@@ -35,36 +51,8 @@ export default function Navbar() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY, dropdownOpen, isBrowser]); // isBrowser ekledik
+  }, [lastScrollY, isBrowser]);
 
-  useEffect(() => {
-    // Browser check - bu eklendi
-    if (!isBrowser) return;
-    
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isBrowser]); // isBrowser ekledik
-
-  const handleMouseEnter = () => {
-    if (closeTimeout.current) {
-      clearTimeout(closeTimeout.current);
-    }
-    setDropdownOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    closeTimeout.current = setTimeout(() => {
-      setDropdownOpen(false);
-    }, 150);
-  };
-
-  // Sayfada sadece dropdown gösterim kısmını değiştirdik
-  // {dropdownOpen && (   ->   {isBrowser && dropdownOpen && (
   return (
     <header
       className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible
@@ -95,12 +83,10 @@ export default function Navbar() {
           Anasayfa
         </Link>
         
-        {/* Hizmetlerimiz Dropdown */}
+        {/* Hizmetlerimiz Dropdown - Tüm alanı kapsayan div */}
         <div
           className="relative inline-block"
           ref={dropdownRef}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
           <Link
             to="/#services"
@@ -108,16 +94,22 @@ export default function Navbar() {
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </Link>
-          {isBrowser && dropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex flex-col gap-2 z-50">
-              <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
-              <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
-              <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
-              <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
-              <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
-              <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
-            </div>
-          )}
+          
+          {/* Dropdown ve ana menü arasındaki boşluğu doldurmak için */}
+          <div className="absolute top-full left-0 right-0 h-3 bg-transparent" />
+          
+          <div 
+            ref={dropdownContentRef}
+            className="absolute top-[calc(100%+3px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex-col gap-2 z-50"
+            style={{ display: 'none' }}
+          >
+            <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
+            <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
+            <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
+            <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
+            <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
+            <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
+          </div>
         </div>
 
         <Link to="/about" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">

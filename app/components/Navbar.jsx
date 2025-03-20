@@ -9,6 +9,7 @@ export default function Navbar() {
   const [isBrowser, setIsBrowser] = useState(false);
   const location = useLocation();
   const mobileMenuRef = useRef(null);
+  const menuButtonRef = useRef(null); // Menü butonu için ref eklendi
 
   // Client-side check
   useEffect(() => {
@@ -25,23 +26,28 @@ export default function Navbar() {
     if (!isBrowser) return;
     
     function handleClickOutside(event) {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && 
+          menuButtonRef.current && !menuButtonRef.current.contains(event.target)) {
         setMobileMenuOpen(false);
       }
     }
     
     if (mobileMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      // Touch eventlerini ekleyelim
+      document.addEventListener("touchstart", handleClickOutside);
     }
     
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [mobileMenuOpen, isBrowser]);
 
   // Toggle mobile menu with forced client-side handling
   const toggleMobileMenu = () => {
     if (isBrowser) {
+      console.log('Menu toggle clicked'); // Debug için log ekleyelim
       setMobileMenuOpen(prevState => !prevState);
     }
   };
@@ -117,7 +123,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none translate-y-[-100%]" : "opacity-100 bg-white shadow-2xl"}`}>
+    <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-[999] transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none translate-y-[-100%]" : "opacity-100 bg-white shadow-2xl"}`}>
       {/* Logo */}
       <div className="flex items-center space-x-3">
         <Link to="/" className="flex items-center">
@@ -128,23 +134,27 @@ export default function Navbar() {
 
       {/* Mobile menu button */}
       <button
-        className="md:hidden text-black p-2"
+        ref={menuButtonRef} // Ref eklendi
+        className="md:hidden text-black p-2 z-[1000]" // z-index arttırıldı
         onClick={toggleMobileMenu}
+        onTouchStart={(e) => { e.preventDefault(); toggleMobileMenu(); }} // Touch event eklendi
         aria-label="Toggle menu"
         type="button"
+        style={{ touchAction: 'manipulation' }} // Touch action eklendi
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-8 h-8" /> {/* Boyutu büyütüldü */}
       </button>
 
       {/* Navigation menu */}
       <nav 
         ref={mobileMenuRef}
-        className={`absolute md:relative top-16 md:top-auto left-0 w-full md:w-auto bg-white md:bg-transparent shadow-md md:shadow-none p-4 sm:p-5 md:p-0 flex flex-col md:flex-row items-center md:space-x-8 text-base sm:text-lg font-medium ${mobileMenuOpen ? "block" : "hidden md:flex"}`}
+        className={`absolute md:relative top-16 md:top-auto left-0 w-full md:w-auto bg-white md:bg-transparent shadow-md md:shadow-none p-4 sm:p-5 md:p-0 flex flex-col md:flex-row items-center md:space-x-8 text-base sm:text-lg font-medium rounded-lg z-[990] ${mobileMenuOpen ? "block" : "hidden md:flex"}`}
       >
         {/* Mobile menu close button */}
         <button
-          className="md:hidden self-end text-gray-500 mb-4"
+          className="md:hidden self-end text-gray-500 mb-4 p-2 text-xl" // Padding eklendi ve font büyütüldü
           onClick={() => setMobileMenuOpen(false)}
+          onTouchStart={(e) => { e.preventDefault(); setMobileMenuOpen(false); }} // Touch event eklendi
         >
           X
         </button>

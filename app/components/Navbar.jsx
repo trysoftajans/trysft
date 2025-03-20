@@ -139,6 +139,6 @@ export default function Navbar() {
           Detaylı Bilgi
         </Link>
       </div>
-    </header>
+    </header> 
   );
 }

@@ -1,98 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "@remix-run/react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 
 export default function Navbar() {
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  
-  // Sayfa yüklenirken React'tan bağımsız olarak çalışacak script
-  useEffect(() => {
-    // React dışında, doğrudan vanilla JS ile menüyü yönetecek kod
-    const vanillaJSFix = `
-      (function() {
-        // Sayfa tamamen yüklendiğinde çalışacak
-        function initMobileMenu() {
-          // Elementleri bulalım
-          var hamburgerButton = document.getElementById('hamburger-button');
-          var mobileMenu = document.getElementById('mobile-menu');
-          
-          // Menüyü başlangıçta gizleyelim
-          if (mobileMenu) {
-            mobileMenu.style.display = 'none';
-          }
-          
-          // Buton işlevselliği
-          if (hamburgerButton && mobileMenu) {
-            // Yeni bir tıklama işleyici ekleyelim
-            hamburgerButton.onclick = function(e) {
-              e.preventDefault();
-              toggleMenu();
-            };
-            
-            // Dokunmatik işleyiciler
-            hamburgerButton.ontouchstart = function(e) {
-              e.preventDefault();
-              toggleMenu();
-              return false;
-            };
-            
-            // Menü açma/kapama
-            function toggleMenu() {
-              console.log("Menü toggle çalıştı");
-              if (mobileMenu.style.display === 'flex') {
-                mobileMenu.style.display = 'none';
-              } else {
-                mobileMenu.style.display = 'flex';
-              }
-            }
-            
-            // Dışarı tıklama ile kapanma
-            document.addEventListener('click', function(e) {
-              if (mobileMenu.style.display === 'flex' && 
-                  !mobileMenu.contains(e.target) && 
-                  !hamburgerButton.contains(e.target)) {
-                mobileMenu.style.display = 'none';
-              }
-            });
-          }
-        }
-        
-        // Sayfa yüklendiğinde veya DOM değiştiğinde tekrar çalıştıralım
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-          setTimeout(initMobileMenu, 1);
-        } else {
-          document.addEventListener('DOMContentLoaded', initMobileMenu);
-        }
-        
-        // Sayfada gezinme olduğunda veya DOM güncellendiğinde de çalıştıralım
-        var lastCheckedHref = window.location.href;
-        setInterval(function() {
-          if (window.location.href !== lastCheckedHref) {
-            lastCheckedHref = window.location.href;
-            setTimeout(initMobileMenu, 100);
-          }
-        }, 500);
-        
-        // Hemen çalıştıralım
-        initMobileMenu();
-      })();
-    `;
-    
-    // Script'i sayfaya ekleyelim
-    const scriptElem = document.createElement('script');
-    scriptElem.innerHTML = vanillaJSFix;
-    document.body.appendChild(scriptElem);
-    
-    // Temizleme
-    return () => {
-      if (scriptElem && document.body.contains(scriptElem)) {
-        document.body.removeChild(scriptElem);
-      }
-    };
-  }, []);
 
   // Scroll handler
   useEffect(() => {
@@ -151,21 +64,21 @@ export default function Navbar() {
           </Link>
         </div>
         
-        {/* Hamburger Button - En basit haliyle */}
+        {/* Hamburger Button - ÖNEMLİ: Sadece ID'si var, event handler yok */}
         <button
           id="hamburger-button"
           type="button"
-          className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none z-[10000]"
+          className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none"
           aria-label="Toggle navigation"
         >
           <Menu className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Mobile Menu - Tüm event handler'ları kaldırıldı */}
+      {/* Mobile Menu - ÖNEMLİ: Sadece ID'si var, event handler yok */}
       <div
         id="mobile-menu"
-        className="absolute left-0 top-20 w-full bg-white rounded-xl shadow-lg p-4 flex-col items-start z-[9990]"
+        className="absolute left-0 top-20 w-full bg-white rounded-xl shadow-lg p-4 flex-col items-start z-40"
         style={{ display: 'none' }}
       >
         <Link to="/" className="w-full py-3 border-b border-gray-100 text-black">
@@ -204,7 +117,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Desktop Navigation - Orijinal tasarıma uygun, ortalanmış */}
+      {/* Desktop Navigation - Orijinal tasarıma uygun */}
       <nav className="hidden md:flex items-center space-x-8 text-base sm:text-lg font-medium">
         <Link to="/" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
           Anasayfa

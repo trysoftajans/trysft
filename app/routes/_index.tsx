@@ -38,6 +38,8 @@ export default function Index() {
     }
   }, [location, isBrowser]); // isBrowser'ı dependency olarak ekledik
 
+    
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Home />

@@ -32,17 +32,24 @@ export default function Navbar() {
     }
   }, [location, isBrowser]);
 
-  // Scroll handler
+  // Improved scroll handler
   useEffect(() => {
     if (!isBrowser) return;
     
     const handleScroll = () => {
-      if (window.scrollY > lastScrollY && window.scrollY > 50) {
+      const currentScrollY = window.scrollY;
+      
+      // Hide navbar when scrolling down and past threshold
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setScrolling(true);
-      } else {
+      } 
+      // Show navbar when scrolling up
+      else if (currentScrollY < lastScrollY) {
         setScrolling(false);
       }
-      setLastScrollY(window.scrollY);
+      
+      // Update last scroll position
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -69,7 +76,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none" : "opacity-100 bg-white shadow-2xl"}`}>
+    <header className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-50 transition-all duration-500 ease-in-out rounded-full shadow-lg overflow-visible ${scrolling ? "opacity-0 pointer-events-none translate-y-[-100%]" : "opacity-100 bg-white shadow-2xl"}`}>
       {/* Logo */}
       <div className="flex items-center space-x-3">
         <Link to="/" className="flex items-center">

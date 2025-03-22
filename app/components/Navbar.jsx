@@ -6,11 +6,10 @@ export default function Navbar() {
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
+  const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const location = useLocation();
   const mobileMenuRef = useRef(null);
   const buttonRef = useRef(null);
-  const servicesMenuRef = useRef(null);
   
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -44,29 +43,23 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Sabit ID'lerle çalışalım, React state yerine DOM elementlerine odaklanalım
+  // Mobile menu toggle
   const toggleMobileMenu = (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     
-    // DOM elementini direkt referans alalım
     const menu = document.getElementById('mobile-menu');
     if (!menu) return;
     
-    // Menü o an açıksa (görünürse) kapatalım, kapalıysa açalım
     if (menu.style.display === 'flex') {
-      // Menü açık, kapatalım
       menu.style.display = 'none';
       setMobileMenuOpen(false);
     } else {
-      // Menü kapalı, açalım
       menu.style.display = 'flex';
       setMobileMenuOpen(true);
     }
-    
-    console.log("Menü durumu değiştirildi:", menu.style.display === 'flex' ? 'açık' : 'kapalı');
   };
 
   // Dışarıya tıklayınca menüyü kapatma
@@ -103,13 +96,9 @@ export default function Navbar() {
     }
   };
 
-  // Desktop hizmetlerimiz menü kontrolü
-  const handleOpenServicesMenu = () => {
-    setServicesMenuOpen(true);
-  };
-
-  const handleCloseServicesMenu = () => {
-    setServicesMenuOpen(false);
+  // Toggle services dropdown (for both desktop and mobile)
+  const toggleServicesDropdown = () => {
+    setServicesDropdownOpen(!servicesDropdownOpen);
   };
 
   return (
@@ -211,35 +200,31 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Desktop Navigation - Orijinal tasarıma uygun, ortalanmış */}
+      {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center space-x-8 text-base sm:text-lg font-medium">
         <Link to="/" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
           Anasayfa
         </Link>
         
-        <div className="relative" onMouseEnter={handleOpenServicesMenu} onMouseLeave={handleCloseServicesMenu}>
-          <a 
-            href="/#services" 
-            onClick={handleServicesClick}
-            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
+        {/* Services Dropdown - Click based instead of hover */}
+        <div className="relative inline-block">
+          <button
+            onClick={toggleServicesDropdown}
+            className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer bg-transparent border-none font-medium text-base sm:text-lg"
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
-          </a>
+          </button>
           
-          {/* Bu görünmez element boşluğu kapatır, imleç dropdown'a giderken menünün kapanmasını önler */}
-          <div className="absolute h-12 w-full top-full left-0"></div>
-          
-          {/* Dropdown menu */}
-          <div 
-            className={`absolute ${servicesMenuOpen ? 'flex flex-col' : 'hidden'} top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50`}
-          >
-            <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
-            <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
-            <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
-            <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
-            <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
-            <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
-          </div>
+          {servicesDropdownOpen && (
+            <div className="absolute top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 flex flex-col gap-2 z-50">
+              <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
+              <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
+              <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>
+              <Link to="/ecommerce" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">E-Ticaret Danışmanlığı</Link>
+              <Link to="/socialmedia" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Sosyal Medya Yönetimi</Link>
+              <Link to="/web-development" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
+            </div>
+          )}
         </div>
 
         <Link to="/about" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
@@ -264,6 +249,14 @@ export default function Navbar() {
           Detaylı Bilgi
         </Link>
       </div>
+
+      {/* Click handler to close services dropdown when clicking outside */}
+      {servicesDropdownOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-transparent"
+          onClick={toggleServicesDropdown}
+        ></div>
+      )}
     </header>
   );
 }

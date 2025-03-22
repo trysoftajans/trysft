@@ -97,65 +97,65 @@ export default function Navbar() {
 
   return (
     <>
-      {/* CSS for dropdown menus - putting this at the top to ensure it loads */}
-      <style jsx>{`
-        /* Dropdown container */
-        .nav-dropdown {
+      {/* Directly injected CSS - this will be in the head of the document */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Main dropdown styles */
+        .navbar-dropdown {
           position: relative;
           display: inline-block;
+          cursor: pointer;
         }
-        
-        /* Dropdown menu (hidden by default) */
-        .nav-dropdown-content {
-          visibility: hidden;
-          opacity: 0;
+
+        /* The dropdown menu itself */
+        .dropdown-menu {
           position: absolute;
           top: 100%;
           left: 0;
+          margin-top: 20px;
           background-color: white;
-          min-width: 200px;
-          box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-          z-index: 9999;
           border-radius: 8px;
-          padding: 8px 0;
-          transition: all 0.3s ease;
-          transform: translateY(10px);
-          pointer-events: none;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+          min-width: 220px;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+          z-index: 100;
         }
-        
-        /* Show the dropdown menu on hover */
-        .nav-dropdown:hover .nav-dropdown-content {
-          visibility: visible;
+
+        /* The trigger area - expanded to create a larger hover target */
+        .trigger-area {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          height: 30px;
+          background-color: transparent;
+        }
+
+        /* Show menu when parent or trigger area is hovered */
+        .navbar-dropdown:hover .dropdown-menu,
+        .navbar-dropdown:hover .trigger-area,
+        .trigger-area:hover + .dropdown-menu,
+        .dropdown-menu:hover {
           opacity: 1;
-          transform: translateY(20px);
-          pointer-events: auto;
+          visibility: visible;
+          transition-delay: 0s;
         }
         
-        /* Links inside the dropdown */
-        .nav-dropdown-content a {
-          color: black;
-          padding: 10px 16px;
-          text-decoration: none;
+        /* Menu links styling */
+        .dropdown-menu a {
           display: block;
+          padding: 12px 16px;
+          text-decoration: none;
+          color: black;
+          transition: background-color 0.2s;
           white-space: nowrap;
         }
-        
-        /* Change color of dropdown links on hover */
-        .nav-dropdown-content a:hover {
-          background-color: #f1f1f1;
+
+        .dropdown-menu a:hover {
+          background-color: #f5f5f5;
         }
-        
-        /* Create an invisible spacer to ensure there's no gap between menu and dropdown */
-        .nav-dropdown::after {
-          content: "";
-          position: absolute;
-          height: 20px;
-          width: 100%;
-          top: 100%;
-          left: 0;
-          z-index: 9998;
-        }
-      `}</style>
+      ` }} />
 
       <header 
         className={`fixed top-5 left-1/2 transform -translate-x-1/2 w-[90%] max-w-full px-6 sm:px-10 py-1 sm:py-2 flex items-center justify-between z-[9999] transition-all duration-300 rounded-full shadow-lg ${
@@ -261,8 +261,8 @@ export default function Navbar() {
             Anasayfa
           </Link>
           
-          {/* Services Dropdown with Pure CSS */}
-          <div className="nav-dropdown">
+          {/* Services Dropdown - with custom hover area */}
+          <div className="navbar-dropdown">
             <a 
               href="/#services"
               onClick={handleServicesClick}
@@ -271,15 +271,17 @@ export default function Navbar() {
               Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
             </a>
             
-            <div className="nav-dropdown-content">
-              <div className="py-2">
-                <Link to="/seo" className="block px-4 py-2 hover:bg-gray-100">Seo</Link>
-                <Link to="/mobile-app" className="block px-4 py-2 hover:bg-gray-100">Mobil Uygulama</Link>
-                <Link to="/digital-growth" className="block px-4 py-2 hover:bg-gray-100">Dijital Pazarlama</Link>
-                <Link to="/ecommerce" className="block px-4 py-2 hover:bg-gray-100">E-Ticaret Danışmanlığı</Link>
-                <Link to="/socialmedia" className="block px-4 py-2 hover:bg-gray-100">Sosyal Medya Yönetimi</Link>
-                <Link to="/web-development" className="block px-4 py-2 hover:bg-gray-100">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
-              </div>
+            {/* This is an invisible area that helps maintain hover state */}
+            <div className="trigger-area"></div>
+            
+            {/* The actual dropdown menu */}
+            <div className="dropdown-menu">
+              <Link to="/seo">Seo</Link>
+              <Link to="/mobile-app">Mobil Uygulama</Link>
+              <Link to="/digital-growth">Dijital Pazarlama</Link>
+              <Link to="/ecommerce">E-Ticaret Danışmanlığı</Link>
+              <Link to="/socialmedia">Sosyal Medya Yönetimi</Link>
+              <Link to="/web-development">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
             </div>
           </div>
 

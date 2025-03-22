@@ -103,16 +103,13 @@ export default function Navbar() {
     }
   };
 
-  // Services menu hover handlers
-  const handleServicesMouseEnter = () => {
+  // Desktop hizmetlerimiz menü kontrolü
+  const handleOpenServicesMenu = () => {
     setServicesMenuOpen(true);
   };
 
-  const handleServicesMouseLeave = () => {
-    // Small delay to prevent menu from closing too quickly
-    setTimeout(() => {
-      setServicesMenuOpen(false);
-    }, 300);
+  const handleCloseServicesMenu = () => {
+    setServicesMenuOpen(false);
   };
 
   return (
@@ -220,21 +217,21 @@ export default function Navbar() {
           Anasayfa
         </Link>
         
-        <div 
-          className="relative inline-block group"
-        >
+        <div className="relative" onMouseEnter={handleOpenServicesMenu} onMouseLeave={handleCloseServicesMenu}>
           <a 
             href="/#services" 
             onClick={handleServicesClick}
             className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
-            onMouseEnter={handleServicesMouseEnter}
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </a>
           
+          {/* Bu görünmez element boşluğu kapatır, imleç dropdown'a giderken menünün kapanmasını önler */}
+          <div className="absolute h-12 w-full top-full left-0"></div>
+          
+          {/* Dropdown menu */}
           <div 
-            ref={servicesMenuRef}
-            className="absolute hidden group-hover:flex group-hover:flex-col top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50"
+            className={`absolute ${servicesMenuOpen ? 'flex flex-col' : 'hidden'} top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50`}
           >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>

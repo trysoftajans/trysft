@@ -107,9 +107,10 @@ export default function Navbar() {
         
         /* Dropdown menu (hidden by default) */
         .nav-dropdown-content {
-          display: none;
+          visibility: hidden;
+          opacity: 0;
           position: absolute;
-          top: calc(100% + 5px);
+          top: 100%;
           left: 0;
           background-color: white;
           min-width: 200px;
@@ -117,11 +118,17 @@ export default function Navbar() {
           z-index: 9999;
           border-radius: 8px;
           padding: 8px 0;
+          transition: all 0.3s ease;
+          transform: translateY(10px);
+          pointer-events: none;
         }
         
         /* Show the dropdown menu on hover */
         .nav-dropdown:hover .nav-dropdown-content {
-          display: block;
+          visibility: visible;
+          opacity: 1;
+          transform: translateY(20px);
+          pointer-events: auto;
         }
         
         /* Links inside the dropdown */
@@ -138,13 +145,13 @@ export default function Navbar() {
           background-color: #f1f1f1;
         }
         
-        /* Create an invisible gap filler to prevent the menu from closing */
+        /* Create an invisible spacer to ensure there's no gap between menu and dropdown */
         .nav-dropdown::after {
           content: "";
           position: absolute;
-          height: 15px;
+          height: 20px;
           width: 100%;
-          bottom: -15px;
+          top: 100%;
           left: 0;
           z-index: 9998;
         }
@@ -265,12 +272,14 @@ export default function Navbar() {
             </a>
             
             <div className="nav-dropdown-content">
-              <Link to="/seo">Seo</Link>
-              <Link to="/mobile-app">Mobil Uygulama</Link>
-              <Link to="/digital-growth">Dijital Pazarlama</Link>
-              <Link to="/ecommerce">E-Ticaret Danışmanlığı</Link>
-              <Link to="/socialmedia">Sosyal Medya Yönetimi</Link>
-              <Link to="/web-development">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
+              <div className="py-2">
+                <Link to="/seo" className="block px-4 py-2 hover:bg-gray-100">Seo</Link>
+                <Link to="/mobile-app" className="block px-4 py-2 hover:bg-gray-100">Mobil Uygulama</Link>
+                <Link to="/digital-growth" className="block px-4 py-2 hover:bg-gray-100">Dijital Pazarlama</Link>
+                <Link to="/ecommerce" className="block px-4 py-2 hover:bg-gray-100">E-Ticaret Danışmanlığı</Link>
+                <Link to="/socialmedia" className="block px-4 py-2 hover:bg-gray-100">Sosyal Medya Yönetimi</Link>
+                <Link to="/web-development" className="block px-4 py-2 hover:bg-gray-100">Kurumsal Web Sitesi Ve E-Ticaret Sitesi</Link>
+              </div>
             </div>
           </div>
 

@@ -1,11 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "@remix-run/react";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const [scrolling, setScrolling] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
   const location = useLocation();
+  const mobileMenuRef = useRef(null);
+  const buttonRef = useRef(null);
+  const servicesMenuRef = useRef(null);
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    setLastScrollY(window.scrollY);
+    
+    // Sayfa yüklendiğinde menünün kapalı olduğundan emin olalım
+    const menu = document.getElementById('mobile-menu');
+    if (menu) {
+      menu.style.display = 'none';
+    }
+  }, []);
 
   // Scroll handler
   useEffect(() => {
@@ -27,6 +44,54 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  // Sabit ID'lerle çalışalım, React state yerine DOM elementlerine odaklanalım
+  const toggleMobileMenu = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // DOM elementini direkt referans alalım
+    const menu = document.getElementById('mobile-menu');
+    if (!menu) return;
+    
+    // Menü o an açıksa (görünürse) kapatalım, kapalıysa açalım
+    if (menu.style.display === 'flex') {
+      // Menü açık, kapatalım
+      menu.style.display = 'none';
+      setMobileMenuOpen(false);
+    } else {
+      // Menü kapalı, açalım
+      menu.style.display = 'flex';
+      setMobileMenuOpen(true);
+    }
+    
+    console.log("Menü durumu değiştirildi:", menu.style.display === 'flex' ? 'açık' : 'kapalı');
+  };
+
+  // Dışarıya tıklayınca menüyü kapatma
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleClickOutside = (e) => {
+      const menu = document.getElementById('mobile-menu');
+      const button = document.getElementById('hamburger-button');
+      
+      if (menu && button && !menu.contains(e.target) && !button.contains(e.target)) {
+        menu.style.display = 'none';
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   // Handle services link click
   const handleServicesClick = (e) => {
     if (window.location.pathname === '/') {
@@ -36,6 +101,21 @@ export default function Navbar() {
         servicesElement.scrollIntoView({ behavior: "smooth" });
       }
     }
+  };
+
+  // Services menu hover handlers
+  const handleServicesMouseEnter = () => {
+    setServicesMenuOpen(true);
+  };
+
+  const handleServicesMouseLeave = () => {
+    // Instead of immediately closing, set a small timeout
+    setTimeout(() => {
+      // Only close if the mouse isn't over the dropdown
+      if (!servicesMenuRef.current || !servicesMenuRef.current.matches(':hover')) {
+        setServicesMenuOpen(false);
+      }
+    }, 100);
   };
 
   return (
@@ -64,22 +144,42 @@ export default function Navbar() {
           </Link>
         </div>
         
-        {/* Hamburger Button - ÖNEMLİ: Sadece ID'si var, event handler yok */}
+        {/* Hamburger Button */}
         <button
           id="hamburger-button"
+          ref={buttonRef}
           type="button"
-          className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none"
+          onClick={toggleMobileMenu}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            toggleMobileMenu(e);
+          }}
+          className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white hover:bg-gray-800 focus:outline-none z-[10000]"
+          aria-expanded={mobileMenuOpen}
           aria-label="Toggle navigation"
+          style={{ 
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+            cursor: 'pointer'
+          }}
         >
-          <Menu className="w-6 h-6" />
+          {mobileMenuOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
       </div>
 
-      {/* Mobile Menu - ÖNEMLİ: Sadece ID'si var, event handler yok */}
+      {/* Mobile Menu */}
       <div
         id="mobile-menu"
-        className="absolute left-0 top-20 w-full bg-white rounded-xl shadow-lg p-4 flex-col items-start z-40"
-        style={{ display: 'none' }}
+        ref={mobileMenuRef}
+        className="absolute left-0 top-20 w-full bg-white rounded-xl shadow-lg p-4 flex-col items-start z-[9990]"
+        style={{ 
+          display: 'none', 
+          transition: 'none'
+        }}
       >
         <Link to="/" className="w-full py-3 border-b border-gray-100 text-black">
           Anasayfa
@@ -117,13 +217,17 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* Desktop Navigation - Orijinal tasarıma uygun */}
+      {/* Desktop Navigation - Orijinal tasarıma uygun, ortalanmış */}
       <nav className="hidden md:flex items-center space-x-8 text-base sm:text-lg font-medium">
         <Link to="/" className="transition duration-300 cursor-pointer text-black hover:text-gray-500 py-1">
           Anasayfa
         </Link>
         
-        <div className="relative inline-block group">
+        <div 
+          className="relative inline-block"
+          onMouseEnter={handleServicesMouseEnter}
+          onMouseLeave={handleServicesMouseLeave}
+        >
           <a 
             href="/#services" 
             onClick={handleServicesClick}
@@ -132,7 +236,12 @@ export default function Navbar() {
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </a>
           
-          <div className="absolute hidden group-hover:flex group-hover:flex-col top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50">
+          <div 
+            ref={servicesMenuRef}
+            className={`absolute ${servicesMenuOpen ? 'flex flex-col' : 'hidden'} top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50`}
+            onMouseEnter={() => setServicesMenuOpen(true)}
+            onMouseLeave={() => setServicesMenuOpen(false)}
+          >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
             <Link to="/digital-growth" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Dijital Pazarlama</Link>

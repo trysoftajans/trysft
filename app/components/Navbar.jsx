@@ -109,13 +109,10 @@ export default function Navbar() {
   };
 
   const handleServicesMouseLeave = () => {
-    // Instead of immediately closing, set a small timeout
+    // Small delay to prevent menu from closing too quickly
     setTimeout(() => {
-      // Only close if the mouse isn't over the dropdown
-      if (!servicesMenuRef.current || !servicesMenuRef.current.matches(':hover')) {
-        setServicesMenuOpen(false);
-      }
-    }, 100);
+      setServicesMenuOpen(false);
+    }, 300);
   };
 
   return (
@@ -224,23 +221,20 @@ export default function Navbar() {
         </Link>
         
         <div 
-          className="relative inline-block"
-          onMouseEnter={handleServicesMouseEnter}
-          onMouseLeave={handleServicesMouseLeave}
+          className="relative inline-block group"
         >
           <a 
             href="/#services" 
             onClick={handleServicesClick}
             className="flex items-center text-black hover:text-gray-500 transition duration-300 py-1 cursor-pointer"
+            onMouseEnter={handleServicesMouseEnter}
           >
             Hizmetlerimiz <ChevronDown className="w-4 h-4 ml-1" />
           </a>
           
           <div 
             ref={servicesMenuRef}
-            className={`absolute ${servicesMenuOpen ? 'flex flex-col' : 'hidden'} top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50`}
-            onMouseEnter={() => setServicesMenuOpen(true)}
-            onMouseLeave={() => setServicesMenuOpen(false)}
+            className="absolute hidden group-hover:flex group-hover:flex-col top-[calc(100%+12px)] left-0 w-auto bg-white shadow-lg rounded-lg py-2 px-4 gap-2 z-50"
           >
             <Link to="/seo" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Seo</Link>
             <Link to="/mobile-app" className="px-3 py-2 text-black hover:bg-gray-100 whitespace-nowrap">Mobil Uygulama</Link>
